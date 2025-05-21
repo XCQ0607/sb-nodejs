@@ -22,11 +22,10 @@ const NEZHA_PORT = process.env.NEZHA_PORT || '';
 const NEZHA_KEY = process.env.NEZHA_KEY || '';
 const NAME = process.env.NAME || os.hostname();
 console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+console.log("甬哥改版项目  ：github.com/XCQ0607");
 console.log("甬哥Github项目  ：github.com/yonggekkk");
-console.log("甬哥Blogger博客 ：ygkkk.blogspot.com");
-console.log("甬哥YouTube频道 ：www.youtube.com/@ygkkk");
 console.log("Nodejs真一键无交互Vless代理脚本");
-console.log("当前版本：25.5.20 测试beta3版");
+console.log("当前版本：1.0.0 ");
 console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 async function getVariableValue(variableName, defaultValue) {
     const envValue = process.env[variableName];
@@ -59,35 +58,83 @@ async function main() {
     const DOMAIN = await getVariableValue('DOMAIN', '');// 为保证安全隐蔽，建议留空，可在Node.js界面下的环境变量添加处（Environment variables）,点击ADD VARIABLE，修改变量
     console.log('你的域名:', DOMAIN);
 
+    // 从API获取优选IP列表
+    const apiData = await fetchApiData();
+
     const httpServer = http.createServer((req, res) => {
         if (req.url === '/') {
-            res.writeHead(200, { 'Content-Type': 'text/plain' });
+            res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
             res.end('Hello, World-YGkkk\n');
         } else if (req.url === `/${UUID}`) {
             let vlessURL;
-            if (NAME.includes('server') || NAME.includes('hostypanel')) {
-            vlessURL = `vless://${UUID}@${DOMAIN}:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}
-vless://${UUID}@104.16.0.0:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}
-vless://${UUID}@104.17.0.0:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}
-vless://${UUID}@104.18.0.0:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}
-vless://${UUID}@104.19.0.0:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}
-vless://${UUID}@104.20.0.0:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}
-vless://${UUID}@104.21.0.0:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}
-vless://${UUID}@104.22.0.0:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}
-vless://${UUID}@104.24.0.0:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}
-vless://${UUID}@104.25.0.0:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}
-vless://${UUID}@104.26.0.0:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}
-vless://${UUID}@104.27.0.0:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}
-vless://${UUID}@[2606:4700::]:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}
-vless://${UUID}@[2400:cb00:2049::]:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}
-`;
-        } else {
-            vlessURL = `vless://${UUID}@${DOMAIN}:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#Vl-ws-tls-${NAME}`;
-            }
-            res.writeHead(200, { 'Content-Type': 'text/plain' });
+            // 定义域名列表和对应的名称列表
+            const domainList = [
+                // 基本地址
+                { domain: DOMAIN, name: `Vl-ws-tls-${NAME}` },
+                // Cloudflare IP地址
+                { domain: "104.16.0.0", name: `Vl-ws-tls-${NAME}` },
+                { domain: "104.17.0.0", name: `Vl-ws-tls-${NAME}` },
+                { domain: "104.18.0.0", name: `Vl-ws-tls-${NAME}` },
+                { domain: "104.19.0.0", name: `Vl-ws-tls-${NAME}` },
+                { domain: "104.20.0.0", name: `Vl-ws-tls-${NAME}` },
+                { domain: "104.21.0.0", name: `Vl-ws-tls-${NAME}` },
+                { domain: "104.22.0.0", name: `Vl-ws-tls-${NAME}` },
+                { domain: "104.24.0.0", name: `Vl-ws-tls-${NAME}` },
+                { domain: "104.25.0.0", name: `Vl-ws-tls-${NAME}` },
+                { domain: "104.26.0.0", name: `Vl-ws-tls-${NAME}` },
+                { domain: "104.27.0.0", name: `Vl-ws-tls-${NAME}` },
+                { domain: "[2606:4700::]", name: `Vl-ws-tls-${NAME}` },
+                { domain: "[2400:cb00:2049::]", name: `Vl-ws-tls-${NAME}` },
+                // 官方优选
+                { domain: "cf.090227.xyz", name: "三网自适应分流官方优选" },
+                { domain: "ct.090227.xyz", name: "电信官方优选" },
+                { domain: "cmcc.090227.xyz", name: "移动官方优选" },
+                // 官方域名优选
+                { domain: "shopify.com", name: "优选官方域名-shopify" },
+                { domain: "time.is", name: "优选官方域名-time" },
+                { domain: "icook.hk", name: "优选官方域名-icook.hk" },
+                { domain: "icook.tw", name: "优选官方域名-icook.tw" },
+                { domain: "ip.sb", name: "优选官方域名-ip.sb" },
+                { domain: "japan.com", name: "优选官方域名-japan" },
+                { domain: "malaysia.com", name: "优选官方域名-malaysia" },
+                { domain: "russia.com", name: "优选官方域名-russia" },
+                { domain: "singapore.com", name: "优选官方域名-singapore" },
+                { domain: "skk.moe", name: "优选官方域名-skk" },
+                { domain: "www.visa.com.sg", name: "优选官方域名-visa.sg" },
+                { domain: "www.visa.com.hk", name: "优选官方域名-visa.hk" },
+                { domain: "www.visa.com.tw", name: "优选官方域名-visa.tw" },
+                { domain: "www.visa.co.jp", name: "优选官方域名-visa.jp" },
+                { domain: "www.visakorea.com", name: "优选官方域名-visa.kr" },
+                { domain: "www.gco.gov.qa", name: "优选官方域名-gov.qa" },
+                { domain: "www.gov.se", name: "优选官方域名-gov.se" },
+                { domain: "www.gov.ua", name: "优选官方域名-gov.ua" },
+                // 第三方维护
+                { domain: "cfip.xxxxxxxx.tk", name: "OTC提供维护官方优选" },
+                { domain: "bestcf.onecf.eu.org", name: "Mingyu提供维护官方优选" },
+                { domain: "cf.zhetengsha.eu.org", name: "小一提供维护官方优选" },
+                { domain: "xn--b6gac.eu.org", name: "第三方维护官方优选" },
+                { domain: "yx.887141.xyz", name: "第三方维护官方优选" },
+                { domain: "8.889288.xyz", name: "第三方维护官方优选" },
+                { domain: "cfip.1323123.xyz", name: "第三方维护官方优选" },
+                { domain: "cf.515188.xyz", name: "第三方维护官方优选" },
+                { domain: "cf-st.annoy.eu.org", name: "第三方维护官方优选" },
+                { domain: "cf.0sm.com", name: "第三方维护官方优选" },
+                { domain: "cf.877771.xyz", name: "第三方维护官方优选" },
+                { domain: "cf.345673.xyz", name: "第三方维护官方优选" },
+                { domain: "bestproxy.onecf.eu.org", name: "Mingyu提供维护反代优选" },
+                { domain: "proxy.xxxxxxxx.tk", name: "OTC提供维护反代优选" },
+                // 从API获取的IP列表
+                ...apiData
+            ];
+            
+            // 构建vlessURL
+            vlessURL = domainList.map(item => 
+                `vless://${UUID}@${item.domain}:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#${item.name}`
+            ).join('\n');
+            res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
             res.end(vlessURL + '\n');
         } else {
-            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
             res.end('Not Found\n');
         }
     });
@@ -217,4 +264,85 @@ function authorizeFiles() {
         }
     });
 }
+
+// 添加从API获取IP的函数
+async function fetchApiData() {
+    const apiList = [
+        {
+            url: 'https://ipdb.api.030101.xyz/?type=bestcf&country=true',
+            namePrefix: '优选官方API(1-'
+        },
+        {
+            url: 'https://addressesapi.090227.xyz/CloudFlareYes',
+            namePrefix: '优选官方API(2-'
+        },
+        {
+            url: 'https://addressesapi.090227.xyz/ip.164746.xyz',
+            namePrefix: '优选官方API(3-'
+        },
+        {
+            url: 'https://ipdb.api.030101.xyz/?type=bestproxy&country=true',
+            namePrefix: '优选反代API(1-'
+        }
+    ];
+
+    let allResults = [];
+
+    try {
+        // 逐个处理API，而不是并行请求
+        for (let apiIndex = 0; apiIndex < apiList.length; apiIndex++) {
+            const api = apiList[apiIndex];
+            console.log(`正在请求 API: ${api.url}`);
+            
+            try {
+                const response = await axios.get(api.url, {
+                    timeout: 8000, // 增加超时时间
+                    validateStatus: function (status) {
+                        return status >= 200 && status < 300;
+                    }
+                });
+                
+                if (response.data) {
+                    let ipList;
+                    if (typeof response.data === 'string') {
+                        // 将返回的数据按行分割
+                        ipList = response.data.trim().split(/[\r\n]+/);
+                        console.log(`API ${api.url} 返回 ${ipList.length} 个IP`);
+                    } else {
+                        console.error(`API返回的数据不是字符串:`, response.data);
+                        ipList = [];
+                    }
+
+                    // 为每个IP创建一个对象，包含域名和名称
+                    ipList.forEach((item, index) => {
+                        const ipParts = item.split('#');
+                        const ip = ipParts[0].trim();
+                        if (ip) {
+                            const nameIndex = index + 1;
+                            let name = `${api.namePrefix}${nameIndex})`;
+                            
+                            // 如果IP后面有额外信息（#后面的部分），添加到名称中
+                            if (ipParts.length > 1) {
+                                name += `-${ipParts[1]}`;
+                            }
+                            
+                            allResults.push({ domain: ip, name: name });
+                            // 添加确认日志
+                            console.log(`添加IP: ${ip} 名称: ${name}`);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error(`获取 ${api.url} 失败: ${error.message}`);
+            }
+        }
+
+        console.log(`总共获取到 ${allResults.length} 个API IP`);
+        return allResults;
+    } catch (error) {
+        console.error('获取API数据时出错:', error.message);
+        return []; // 出错时返回空数组
+    }
+}
+
 main();
