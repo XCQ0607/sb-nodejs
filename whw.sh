@@ -11,8 +11,8 @@ if [ -z $uuid ]; then
 uuid=$(cat /proc/sys/kernel/random/uuid)
 fi
 ps aux | grep '[d]omains' | awk '{print $2}' | xargs -r kill -9
-curl -s -o "/home/$username/domains/$domain/public_html/app.js" "https://raw.githubusercontent.com/yonggekkk/vless-nodejs/main/app.js"
-curl -s -o "/home/$username/domains/$domain/public_html/package.json" "https://raw.githubusercontent.com/yonggekkk/vless-nodejs/main/package.json"
+curl -s -o "/home/$username/domains/$domain/public_html/app.js" "https://raw.githubusercontent.com/XCQ0607/sb-nodejs/main/app.js"
+curl -s -o "/home/$username/domains/$domain/public_html/package.json" "https://raw.githubusercontent.com/XCQ0607/sb-nodejs/main/package.json"
 sed -i "s/('UUID', '')/('UUID', '$uuid')/g" "/home/$username/domains/$domain/public_html/app.js"
 sed -i "s/('DOMAIN', '')/('DOMAIN', '$domain')/g" "/home/$username/domains/$domain/public_html/app.js"
 sed -i "s/('PORT', '')/('PORT', '$vl_port')/g" "/home/$username/domains/$domain/public_html/app.js"
