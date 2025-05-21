@@ -22,10 +22,11 @@ const NEZHA_PORT = process.env.NEZHA_PORT || '';
 const NEZHA_KEY = process.env.NEZHA_KEY || '';
 const NAME = process.env.NAME || os.hostname();
 console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-console.log("甬哥改版项目  ：github.com/XCQ0607");
 console.log("甬哥Github项目  ：github.com/yonggekkk");
+console.log("甬哥Blogger博客 ：ygkkk.blogspot.com");
+console.log("甬哥YouTube频道 ：www.youtube.com/@ygkkk");
 console.log("Nodejs真一键无交互Vless代理脚本");
-console.log("当前版本：1.0.0 ");
+console.log("当前版本：25.5.20 测试beta3版");
 console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 async function getVariableValue(variableName, defaultValue) {
     const envValue = process.env[variableName];
@@ -59,83 +60,124 @@ async function main() {
     console.log('你的域名:', DOMAIN);
 
     // 从API获取优选IP列表
-    const apiData = await fetchApiData();
+    let apiData = await fetchApiData();
+    let lastUpdateTime = new Date().toLocaleString();
+    
+    // 设置定时任务，每10分钟更新一次API数据
+    const updateInterval = 10 * 60 * 1000; // 10分钟，单位为毫秒
+    setInterval(async () => {
+        console.log('定时更新API数据...');
+        try {
+            const newApiData = await fetchApiData();
+            apiData = newApiData; // 更新全局变量
+            lastUpdateTime = new Date().toLocaleString();
+            console.log(`API数据已更新，当前共有 ${apiData.length} 个API IP，更新时间: ${lastUpdateTime}`);
+        } catch (error) {
+            console.error('定时更新API数据失败:', error);
+        }
+    }, updateInterval);
+    console.log(`已设置定时任务，每 ${updateInterval / 60000} 分钟更新一次API数据`);
 
     const httpServer = http.createServer((req, res) => {
-        if (req.url === '/') {
-            res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-            res.end('Hello, World-YGkkk\n');
-        } else if (req.url === `/${UUID}`) {
-            let vlessURL;
-            // 定义域名列表和对应的名称列表
-            const domainList = [
-                // 基本地址
-                { domain: DOMAIN, name: `Vl-ws-tls-${NAME}` },
-                // Cloudflare IP地址
-                { domain: "104.16.0.0", name: `Vl-ws-tls-${NAME}` },
-                { domain: "104.17.0.0", name: `Vl-ws-tls-${NAME}` },
-                { domain: "104.18.0.0", name: `Vl-ws-tls-${NAME}` },
-                { domain: "104.19.0.0", name: `Vl-ws-tls-${NAME}` },
-                { domain: "104.20.0.0", name: `Vl-ws-tls-${NAME}` },
-                { domain: "104.21.0.0", name: `Vl-ws-tls-${NAME}` },
-                { domain: "104.22.0.0", name: `Vl-ws-tls-${NAME}` },
-                { domain: "104.24.0.0", name: `Vl-ws-tls-${NAME}` },
-                { domain: "104.25.0.0", name: `Vl-ws-tls-${NAME}` },
-                { domain: "104.26.0.0", name: `Vl-ws-tls-${NAME}` },
-                { domain: "104.27.0.0", name: `Vl-ws-tls-${NAME}` },
-                { domain: "[2606:4700::]", name: `Vl-ws-tls-${NAME}` },
-                { domain: "[2400:cb00:2049::]", name: `Vl-ws-tls-${NAME}` },
-                // 官方优选
-                { domain: "cf.090227.xyz", name: "三网自适应分流官方优选" },
-                { domain: "ct.090227.xyz", name: "电信官方优选" },
-                { domain: "cmcc.090227.xyz", name: "移动官方优选" },
-                // 官方域名优选
-                { domain: "shopify.com", name: "优选官方域名-shopify" },
-                { domain: "time.is", name: "优选官方域名-time" },
-                { domain: "icook.hk", name: "优选官方域名-icook.hk" },
-                { domain: "icook.tw", name: "优选官方域名-icook.tw" },
-                { domain: "ip.sb", name: "优选官方域名-ip.sb" },
-                { domain: "japan.com", name: "优选官方域名-japan" },
-                { domain: "malaysia.com", name: "优选官方域名-malaysia" },
-                { domain: "russia.com", name: "优选官方域名-russia" },
-                { domain: "singapore.com", name: "优选官方域名-singapore" },
-                { domain: "skk.moe", name: "优选官方域名-skk" },
-                { domain: "www.visa.com.sg", name: "优选官方域名-visa.sg" },
-                { domain: "www.visa.com.hk", name: "优选官方域名-visa.hk" },
-                { domain: "www.visa.com.tw", name: "优选官方域名-visa.tw" },
-                { domain: "www.visa.co.jp", name: "优选官方域名-visa.jp" },
-                { domain: "www.visakorea.com", name: "优选官方域名-visa.kr" },
-                { domain: "www.gco.gov.qa", name: "优选官方域名-gov.qa" },
-                { domain: "www.gov.se", name: "优选官方域名-gov.se" },
-                { domain: "www.gov.ua", name: "优选官方域名-gov.ua" },
-                // 第三方维护
-                { domain: "cfip.xxxxxxxx.tk", name: "OTC提供维护官方优选" },
-                { domain: "bestcf.onecf.eu.org", name: "Mingyu提供维护官方优选" },
-                { domain: "cf.zhetengsha.eu.org", name: "小一提供维护官方优选" },
-                { domain: "xn--b6gac.eu.org", name: "第三方维护官方优选" },
-                { domain: "yx.887141.xyz", name: "第三方维护官方优选" },
-                { domain: "8.889288.xyz", name: "第三方维护官方优选" },
-                { domain: "cfip.1323123.xyz", name: "第三方维护官方优选" },
-                { domain: "cf.515188.xyz", name: "第三方维护官方优选" },
-                { domain: "cf-st.annoy.eu.org", name: "第三方维护官方优选" },
-                { domain: "cf.0sm.com", name: "第三方维护官方优选" },
-                { domain: "cf.877771.xyz", name: "第三方维护官方优选" },
-                { domain: "cf.345673.xyz", name: "第三方维护官方优选" },
-                { domain: "bestproxy.onecf.eu.org", name: "Mingyu提供维护反代优选" },
-                { domain: "proxy.xxxxxxxx.tk", name: "OTC提供维护反代优选" },
-                // 从API获取的IP列表
-                ...apiData
-            ];
+        try {
+            // 解析URL和查询参数
+            const url = new URL(req.url, `http://${req.headers.host}`);
+            const path = url.pathname;
+            const isBase64 = url.searchParams.has('base64') || url.searchParams.has('b64');
             
-            // 构建vlessURL
-            vlessURL = domainList.map(item => 
-                `vless://${UUID}@${item.domain}:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#${item.name}`
-            ).join('\n');
-            res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-            res.end(vlessURL + '\n');
-        } else {
-            res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-            res.end('Not Found\n');
+            console.log(`收到请求: ${req.url}, 路径: ${path}, Base64: ${isBase64}`);
+            
+            if (path === '/') {
+                res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+                const statsInfo = `Hello, World-YGkkk\nAPI IP数量: ${apiData.length}\n最后更新时间: ${lastUpdateTime}`;
+                res.end(statsInfo);
+            } else if (path === `/${UUID}`) {
+                let vlessURL;
+                // 定义域名列表和对应的名称列表
+                const domainList = [
+                    // 基本地址
+                    { domain: DOMAIN, name: `Vl-ws-tls-${NAME}` },
+                    // Cloudflare IP地址
+                    { domain: "104.16.0.0", name: `Vl-ws-tls-${NAME}` },
+                    { domain: "104.17.0.0", name: `Vl-ws-tls-${NAME}` },
+                    { domain: "104.18.0.0", name: `Vl-ws-tls-${NAME}` },
+                    { domain: "104.19.0.0", name: `Vl-ws-tls-${NAME}` },
+                    { domain: "104.20.0.0", name: `Vl-ws-tls-${NAME}` },
+                    { domain: "104.21.0.0", name: `Vl-ws-tls-${NAME}` },
+                    { domain: "104.22.0.0", name: `Vl-ws-tls-${NAME}` },
+                    { domain: "104.24.0.0", name: `Vl-ws-tls-${NAME}` },
+                    { domain: "104.25.0.0", name: `Vl-ws-tls-${NAME}` },
+                    { domain: "104.26.0.0", name: `Vl-ws-tls-${NAME}` },
+                    { domain: "104.27.0.0", name: `Vl-ws-tls-${NAME}` },
+                    { domain: "[2606:4700::]", name: `Vl-ws-tls-${NAME}` },
+                    { domain: "[2400:cb00:2049::]", name: `Vl-ws-tls-${NAME}` },
+                    // 官方优选
+                    { domain: "cf.090227.xyz", name: "三网自适应分流官方优选" },
+                    { domain: "ct.090227.xyz", name: "电信官方优选" },
+                    { domain: "cmcc.090227.xyz", name: "移动官方优选" },
+                    // 官方域名优选
+                    { domain: "shopify.com", name: "优选官方域名-shopify" },
+                    { domain: "time.is", name: "优选官方域名-time" },
+                    { domain: "icook.hk", name: "优选官方域名-icook.hk" },
+                    { domain: "icook.tw", name: "优选官方域名-icook.tw" },
+                    { domain: "ip.sb", name: "优选官方域名-ip.sb" },
+                    { domain: "japan.com", name: "优选官方域名-japan" },
+                    { domain: "malaysia.com", name: "优选官方域名-malaysia" },
+                    { domain: "russia.com", name: "优选官方域名-russia" },
+                    { domain: "singapore.com", name: "优选官方域名-singapore" },
+                    { domain: "skk.moe", name: "优选官方域名-skk" },
+                    { domain: "www.visa.com.sg", name: "优选官方域名-visa.sg" },
+                    { domain: "www.visa.com.hk", name: "优选官方域名-visa.hk" },
+                    { domain: "www.visa.com.tw", name: "优选官方域名-visa.tw" },
+                    { domain: "www.visa.co.jp", name: "优选官方域名-visa.jp" },
+                    { domain: "www.visakorea.com", name: "优选官方域名-visa.kr" },
+                    { domain: "www.gco.gov.qa", name: "优选官方域名-gov.qa" },
+                    { domain: "www.gov.se", name: "优选官方域名-gov.se" },
+                    { domain: "www.gov.ua", name: "优选官方域名-gov.ua" },
+                    // 第三方维护
+                    { domain: "cfip.xxxxxxxx.tk", name: "OTC提供维护官方优选" },
+                    { domain: "bestcf.onecf.eu.org", name: "Mingyu提供维护官方优选" },
+                    { domain: "cf.zhetengsha.eu.org", name: "小一提供维护官方优选" },
+                    { domain: "xn--b6gac.eu.org", name: "第三方维护官方优选" },
+                    { domain: "yx.887141.xyz", name: "第三方维护官方优选" },
+                    { domain: "8.889288.xyz", name: "第三方维护官方优选" },
+                    { domain: "cfip.1323123.xyz", name: "第三方维护官方优选" },
+                    { domain: "cf.515188.xyz", name: "第三方维护官方优选" },
+                    { domain: "cf-st.annoy.eu.org", name: "第三方维护官方优选" },
+                    { domain: "cf.0sm.com", name: "第三方维护官方优选" },
+                    { domain: "cf.877771.xyz", name: "第三方维护官方优选" },
+                    { domain: "cf.345673.xyz", name: "第三方维护官方优选" },
+                    { domain: "bestproxy.onecf.eu.org", name: "Mingyu提供维护反代优选" },
+                    { domain: "proxy.xxxxxxxx.tk", name: "OTC提供维护反代优选" },
+                    // 从API获取的IP列表
+                    ...apiData
+                ];
+                
+                // 构建vlessURL
+                vlessURL = domainList.map(item => 
+                    `vless://${UUID}@${item.domain}:443?encryption=none&security=tls&sni=${DOMAIN}&fp=chrome&type=ws&host=${DOMAIN}&path=%2F#${item.name}`
+                ).join('\n');
+                
+                // 检查是否需要Base64编码
+                if (isBase64) {
+                    console.log('执行Base64编码');
+                    vlessURL = Buffer.from(vlessURL).toString('base64');
+                    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+                    console.log(`返回Base64编码内容，长度: ${vlessURL.length} 字符`);
+                    res.end(vlessURL);
+                } else {
+                    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+                    console.log(`返回普通文本内容，${domainList.length} 个URL`);
+                    res.end(vlessURL + '\n');
+                }
+            } else {
+                res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+                res.end('Not Found\n');
+            }
+        } catch (error) {
+            console.error('处理HTTP请求时出错:', error);
+            res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('Internal Server Error\n');
         }
     });
 
