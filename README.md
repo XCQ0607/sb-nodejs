@@ -6,7 +6,7 @@ Webhostmost老账户建议使用Node.js本地环境编辑文件方式搭建，�
 
 
 ```
-wget -N https://raw.githubusercontent.com/yonggekkk/sb-nodejs/main/whm.sh && UUID=你的uuid PORT=服务器可使用的端口 DOMAIN=已解析在CF的域名 bash whm.sh
+wget -N https://raw.githubusercontent.com/XCQ0607/sb-nodejs/main/whm.sh && UUID=你的uuid PORT=服务器可使用的端口 DOMAIN=已解析在CF的域名 bash whm.sh
 ```
 
 
@@ -35,7 +35,7 @@ Webhostmost新/老账户，建议使用外部节点保活方式，可使用worke
 Claw.Cloud专用一键脚本(无交互)：
 
 ```
-wget -N https://raw.githubusercontent.com/yonggekkk/sb-nodejs/main/app.js && UUID=你的uuid PORT=服务器可使用的端口 DOMAIN=服务器域名 node app.js
+wget -N https://raw.githubusercontent.com/XCQ0607/sb-nodejs/main/whm.sh && UUID=你的uuid PORT=服务器可使用的端口 DOMAIN=服务器域名 node app.js
 ```
 ----------------------------------------------------------
 -----------------------------------------------------
@@ -47,18 +47,3 @@ wget -N https://raw.githubusercontent.com/yonggekkk/sb-nodejs/main/app.js && UUI
 
 [Claw.cloud免费VPS搭建代理最终教程：全网最简单 | 两大无交互回车脚本 | 套CDN优选IP | workers反代 | ArgoSB隧道搭建](https://youtu.be/Esofirx8xrE)
 
-更新中……
-
-----------------------------------------------------------
-
-### 交流平台：[甬哥博客地址](https://ygkkk.blogspot.com)、[甬哥YouTube频道](https://www.youtube.com/@ygkkk)、[甬哥TG电报群组](https://t.me/+jZHc6-A-1QQ5ZGVl)、[甬哥TG电报频道](https://t.me/+DkC9ZZUgEFQzMTZl)
-
-----------------------------------------------------------
-### 感谢支持！微信打赏甬哥侃侃侃ygkkk
-![41440820a366deeb8109db5610313a1](https://github.com/user-attachments/assets/e5b1f2c0-bd2c-4b8f-8cda-034d3c8ef73f)
-
-----------------------------------------------------------
-### 感谢你右上角的star🌟
-[![Stargazers over time](https://starchart.cc/yonggekkk/sb-nodejs.svg)](https://starchart.cc/yonggekkk/sb-nodejs)
-
-### 声明：所有代码来源于Github社区与ChatGPT的整合 [eooce](https://github.com/eooce)
